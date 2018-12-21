@@ -6,6 +6,7 @@
 #include <sstream>
 namespace LLD {
 	namespace Ini {
+
 		class IniProperty {
 		public:
 			
@@ -25,6 +26,18 @@ namespace LLD {
 				property->value = str.substr(index + 1, lenth);
 
 				return property;
+			}
+
+			bool ValueToBool() {
+				return value == "true";
+			}
+
+			double ValueToDouble() {
+				return atof(value.c_str());
+			}
+
+			int ValueToInt() {
+				return atoi(value.c_str());
 			}
 
 			static bool CheckIniPropertSyntax(const std::string & str) {
@@ -64,7 +77,27 @@ namespace LLD {
 			void AddProperty(std::shared_ptr<IniProperty> & property) {
 				Properties.push_back(property);
 			}
+			std::shared_ptr<IniProperty> GetPropertyByName(const std::string &name) {
+				auto it = Properties.begin();
+				for (; it != Properties.end(); ++it) {
+					if ((*it)->key == name) {
+						return (*it);
+					}
+				}
+			}
 
+			bool GetBool(const std::string & key) {
+				return GetPropertyByName(key)->ValueToBool();
+			}
+			int GetInt(const std::string & key) {
+				return GetPropertyByName(key)->ValueToInt();
+			}
+			double GetDouble(const std::string & key) {
+				return GetPropertyByName(key)->ValueToDouble();
+			}
+			const std::string & GetString(const std::string & key) {
+				return GetPropertyByName(key)->value;
+			}
 			static std::shared_ptr<IniGroup> ParseIniGroup(const std::string & str) {
 				std::shared_ptr<IniGroup> group(new IniGroup());
 				int lenth = str.length() -2;
@@ -165,6 +198,41 @@ namespace LLD {
 				}
 				
 			}
+			std::shared_ptr<IniGroup> GetGroupByName(const std::string &name) {
+				auto it = Groups.begin();
+				for (; it != Groups.end(); ++it) {
+					if ((*it)->GetGroupName() == name) {
+						return (*it);
+					}
+				}
+			}
+			bool GetBool(const std::string& key = "", std::string group = "") {
+				if (group.length() == 0) {
+					group = this->defaultGroupName;
+				}
+				return GetGroupByName(group)->GetBool(key);
+			}
+			int GetInt(const std::string& key = "", std::string group = "") {
+				if (group.length() == 0) {
+					group = this->defaultGroupName;
+				}
+				return GetGroupByName(group)->GetInt(key);
+			}
+
+			bool GetDouble(const std::string& key = "", std::string group = "") {
+				if (group.length() == 0) {
+					group = this->defaultGroupName;
+				}
+				return GetGroupByName(group)->GetDouble(key);
+			}
+
+			const std::string& GetString(const std::string& key = "", std::string group = "") {
+				if (group.length() == 0) {
+					group = this->defaultGroupName;
+				}
+				return GetGroupByName(group)->GetString(key);
+			}
+
 			friend std::ostream & operator<<(std::ostream & os, const IniFile & inifile) {
 				auto it = inifile.Groups.cbegin();
 				for (; it != inifile.Groups.cend(); ++it) {
